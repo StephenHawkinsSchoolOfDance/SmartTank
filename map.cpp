@@ -106,6 +106,36 @@ bool Map::aStar(std::list<Node>& path, Node start, Node finish) // don't return 
 		open.pop_front(); // take off open list
 		closed.push_back(currentNode); // added to closed list
 		mapArray[currentNode.row][currentNode.column]->setGoal(); // for debug reasons
+		std::list<Node>::iterator cIterator, oIterator;
+		for (auto &neighbour : getNeigh(&currentNode)) {
+			bool foundClosed = false;
+			for (cIterator = closed.begin(); cIterator != closed.end(); ++cIterator) { 
+				if (neighbour->row == cIterator->row && neighbour->column == cIterator->column) {
+					foundClosed = true;
+				}
+			}
+			if (!foundClosed) {
+				neighbour->f = neighbour->g + neighbour->scoreCalc(neighbour->g, 
+					neighbour->getX(), neighbour->getY(), finish.getX(), finish.getY()); 
+				bool foundOpen = false;
+				for (oIterator = open.begin(); oIterator != open.end(); ++oIterator) { 
+					if (neighbour->row == oIterator->row && neighbour->column == oIterator->column) {
+						foundOpen = true;
+					}
+				}
+				if (!foundOpen) {
+					open.push_back(*neighbour); 
+					mapArray[neighbour->row][neighbour->column]->setClosed();
+				}
+				else {
+					Node* openNeighbour = neighbour;
+					if (neighbour->g < openNeighbour->g) {
+						openNeighbour->g = neighbour->g;
+						openNeighbour->parent = neighbour->parent;
+					}
+				}
+			}
+		}
 	}
 	return false;
 }
@@ -124,6 +154,46 @@ std::list<Node> Map::createPath(std::list<Node>& path, std::list<Node>& closed, 
 		closed.erase(iterator); // remove node
 		iterator = closed.end(); // work back through list again from the end as it's backwards
 	}
-
 	return path;
+}
+
+std::vector<Node*> Map::getNeigh(Node * node)
+{
+	sf::Vector2i nodePos(node->row, node->column); // get node pos
+	static float diagonalCost = 1.414; // static cost var // could set in defs
+	// used for when check for node out of bounds
+	std::vector<Node*> neighbours;
+	std::vector<bool> isDiagonal;
+	// find out all possible combos
+	int array[8][3] = {
+		{ nodePos.x, nodePos.y + 1, 0 },
+		{ nodePos.x, nodePos.y - 1, 0 },
+		{ nodePos.x + 1, nodePos.y, 0 },
+		{ nodePos.x - 1, nodePos.y, 0 },		
+		{ nodePos.x + 1, nodePos.y + 1, 1 },
+		{ nodePos.x - 1, nodePos.y - 1, 1 },
+		{ nodePos.x + 1, nodePos.y - 1, 1 },
+		{ nodePos.x - 1, nodePos.y + 1, 1 }
+	};
+	// check for out of bound nodes
+	for (int i = 0; i < 8; i++) {
+		if (array[i][0] < rows && array[i][1] < columns)
+			// check if node is part of the path
+			if (mapArray[array[i][0]][array[i][1]]->Path != false) {
+				// if true add to neighbours
+					// and add diagonal node to list
+				neighbours.push_back(mapArray[array[i][0]][array[i][1]]);
+				isDiagonal.push_back(array[i][2]);
+			}
+	}
+	for (int i = 0; i < neighbours.size(); i++) { 
+		if (isDiagonal[i]) { 
+			neighbours[i]->g = node->g + diagonalCost;
+		}
+		else {
+			neighbours[i]->g = node->g + 1; 
+			neighbours[i]->parent = node->parent;
+		}
+	}
+	return neighbours;
 }

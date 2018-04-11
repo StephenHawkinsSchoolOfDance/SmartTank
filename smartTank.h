@@ -11,7 +11,6 @@ private:
 	sf::RectangleShape tankRect; // smart tank shape
 	Node* currentNode; // will be current location node
 	Node* targetNode; // target location node
-	std::list<Node> path;
 	// bool checks
 	bool runFlag = false;
 	bool crashed;

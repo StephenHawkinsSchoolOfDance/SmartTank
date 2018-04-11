@@ -35,4 +35,5 @@ public:
 	void removeBase(int x, int y); // remove discovered bases from path
 	bool aStar(std::list<Node>& path, Node start, Node finish); // deals with path finding / returns true or false so we know if succesful
 	std::list<Node> Map::createPath(std::list<Node> & path, std::list<Node>& closed, Node* node);
+	std::vector<Node*> Map::getNeigh(Node* node);
 };
