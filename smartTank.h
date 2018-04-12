@@ -11,18 +11,22 @@ private:
 	sf::RectangleShape tankRect; // smart tank shape
 	Node* currentNode; // will be current location node
 	Node* targetNode; // target location node
+	std::list<Node> path; //list containing node objects / used with A* 
 	// bool checks
 	bool runFlag = false;
 	bool crashed;
 	bool enemySpotted = false;
 	bool enemyBaseSpotted = false;
 	bool friendlyBaseSpotted = false;
+	bool lineOfSight = false;
+	bool shooting = false;
 	// counters
 	float enemyDistance = 1000;
 	int enemyBasesCount = 10;
 	int friendlyBaseCount = 10;
 	int scanCount = 0;
 	int turretAngle = 0;
+	int angle2Degree = 0;
 public:
 	smartTank();
 	~smartTank();
@@ -42,5 +46,6 @@ public:
 	void setCurrentNode();
 	void movementHandler();
 	void navigationHandler();
-	
+	void turretHandler();
+	void aimingHandler();
 };

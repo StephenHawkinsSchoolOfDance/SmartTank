@@ -69,19 +69,100 @@ void smartTank::markShell(Position p)
 void smartTank::setCurrentNode()
 {
 	// find player pos
-	int x = (getX() - (map->getNodeX() / 2)) / map->getNodeX();
-	int y = (getY() - (map->getNodeY() / 2)) / map->getNodeY();
+	sf::Vector2i pPos((getX() - (map->getNodeX() / 2)) / map->getNodeX(),
+		(getY() - (map->getNodeY() / 2)) / map->getNodeY());
 	// clean up / set every node current to false
 	for (int i = 0; i < map->getRows(); i++)
 		for (int j = 0; j < map->getColumns(); j++)
 			map->mapArray[i][j]->setCurrent(false);
 	// set node player is in to current
-	map->mapArray[y][x]->setCurrent(true);
-	currentNode = map->mapArray[y][x]; // add reference to our new current node
+	map->mapArray[pPos.y][pPos.x]->setCurrent(true);
+	currentNode = map->mapArray[pPos.y][pPos.x]; // add reference to our new current node
+}
+
+void smartTank::turretHandler() 
+{
+	const int IDLE = 0, FIRING = 1;
+	int state = IDLE;
+	if ((enemySpotted != false || enemyBaseSpotted != false && hasAmmo() && lineOfSight != false))
+		state = FIRING;
+	else 
+		shooting = false; state = IDLE;
+	switch (state)	{
+		case IDLE: return; break;
+		case FIRING: scanCount = 0; shooting = true; enemySpotted = false; 
+			enemyBaseSpotted = false; lineOfSight = false; break;
+	}
+}
+
+void smartTank::aimingHandler()
+{
+	const int SCAN = 0, AIM = 1;
+	int scanState = SCAN;
+	if (scanState == SCAN && friendlyBaseSpotted != true)
+		if (enemySpotted == true) scanState = AIM;
+		else if (enemyBaseSpotted == true) scanState = AIM;
+	if (scanState == AIM && (enemySpotted != true || enemyBaseSpotted != true) && friendlyBaseSpotted != false)
+		scanState == SCAN;
+	if (scanState == AIM && friendlyBaseSpotted != false) scanState == SCAN;
+	//State Switch
+	switch (scanState) {
+	case SCAN: turretGoRight(); break;
+	case AIM: 
+		if (friendlyBaseSpotted != true) {
+			float deltaR = turretTh - turretAngle;
+			if (deltaR > 1 && deltaR < 180)	turretGoLeft();
+			else if (deltaR < -1 && deltaR > -180) turretGoRight();
+			else if (deltaR > 180) turretGoRight();
+			else if (deltaR < -180) turretGoLeft();
+			else lineOfSight = true; stopTurret(); clearMovement(); 
+		} break;
+	}
 }
 
 void smartTank::movementHandler()
 {
+	// setting states
+	const int IDLE = 0, MOVE = 1, ROTATE = 2;
+	int state = IDLE;
+	std::string states[3] = {"IDLE", "MOVE", "ROTATE"};
+	// 
+	if (path.size() != 0) {
+		targetNode = &path.front();
+		if (targetNode->column == currentNode->column)
+			if (targetNode->row == currentNode->row)
+				path.pop_front(); if (path.size() != 0)
+				targetNode = &path.front();
+	}
+	// the distance needed to move
+	sf::Vector2f delta(getX() - targetNode->getX(), getY() - targetNode->getY());
+	angle2Degree = atan2(delta.y, delta.x) * 180 / PI; // rad to deg calc
+	// final angle calc + current AI tank rotation + final angle
+	float finalAngle = angle2Degree + 180, rotation = pos.getTh(), deltaR = rotation - finalAngle;
+	//local vars
+	int distanceThreshold = 5, directionalThreshold = 5;
+	bool facingDirection = (deltaR < directionalThreshold && deltaR > -directionalThreshold);
+	bool atLocation = (path.size() == 0);
+	int direction;
+	// State Transitions
+	if (state == IDLE)
+		if (facingDirection && !atLocation)	state = MOVE;
+		else if (!facingDirection && !atLocation) state = ROTATE;
+		else scanCount++;
+	else if (state == MOVE)
+		if (atLocation)	state = IDLE;
+	else if (state == ROTATE)
+		if (facingDirection) state = MOVE;
+	//State Switch 
+	switch (state) {
+		case IDLE: stop(); break;
+		case MOVE: goForward(); break;
+		case ROTATE:
+			if (deltaR > 1 && deltaR < 180) goLeft();
+			else if (deltaR < -1 && deltaR > -180) goRight();
+			else if (deltaR > 180) goRight();
+			else if (deltaR < -180) goLeft(); break;
+	}
 }
 
 void smartTank::navigationHandler()
@@ -89,20 +170,17 @@ void smartTank::navigationHandler()
 	// first call of method is a map discovery method // will add second search here
 	while (!runFlag) {
 		// pick random location to navigate to
-		int randXLoc = rand() % 13 + 2;
-		int randYLoc = rand() % 5 + 2;
+		int randXLoc = rand() % 13 + 2, randYLoc = rand() % 5 + 2;
 		// do search // use A*
-		runFlag = true; // turn off flag / will be in try catch to ensure tank moves first time
+		if (map->mapArray[randXLoc][randYLoc]->Path != false)
+			map->aStar(path, *currentNode, *map->mapArray[randXLoc][randYLoc]); runFlag = true;
+	    // turn off flag / will be in try catch to ensure tank moves first time
 	}
 	// setting up states // will change syntax
-	const int IDLE = 0;
-	const int MOVE_RAND = 1;
-	const int MOVE_AWAY = 2;
-	const int MOVE_CENTRE = 3;
+	const int IDLE = 0, MOVE_RAND = 1, MOVE_AWAY = 2, MOVE_CENTRE = 3;
 	int state = IDLE;
 	// limits
-	int enemyRangeLimit = 100;
-	int wallRangeLimit = 10;
+	int enemyRangeLimit = 100, wallRangeLimit = 10;
 	// next part is transition conditionals
 	if (state == IDLE) {
 		// if enemy is close or spotted move away // probably should add shell amount check
@@ -164,7 +242,8 @@ void smartTank::navigationHandler()
 					if (move.y <= 21) 
 						move.y = move.y + 1; 
 				} // might add more so it can go to each 4 courners if time depending on turret angle
-				runFlag = false; // turn off if we create a path else loop again
+				if (map->mapArray[move.x][move.y]->Path != false)
+					map->aStar(path, *currentNode, *map->mapArray[move.x][move.y]);	runFlag = true; // turn off if we create a path else loop again
 				// create path here with A*
 			}			
 		} break;
@@ -173,17 +252,50 @@ void smartTank::navigationHandler()
 			sf::Vector2i center(map->getRows() / 2, (map->getColumns() / 2) - 1); // take 1 for sfml shapes
 			while (!runFlag) {
 				// do A* create a path
-				runFlag = false;
+				if (map->mapArray[center.x][center.y]->Path != false)
+					map->aStar(path, *currentNode, *map->mapArray[center.x][center.y]); runFlag = true;
 				// added so if middle is occup
 				center.x++;
 				center.y++;
 			}			 
 		} break;
 		case MOVE_RAND: {
+			scanCount = 0;
+			sf::Vector2i randLoc(0, 0);
+			while (!runFlag)
+			{
+				// if past half way top, check if left or right / else in bottom 
+				if (currentNode->row <= 8 && currentNode->column <= 11 || currentNode->row <= 8 && currentNode->column >= 12) {
+					if (currentNode->column <= 11) { //check for if the current node is past half the map size
+						randLoc.x = rand() % 14 + 8;
+						randLoc.y = rand() % 20 + 11;
+					}
+					else {
+						randLoc.x = rand() % 14 + 8;
+						randLoc.y = rand() % 11 + 2;
+					}
 
+				}
+				else { //could cause problem (add else if)
+					if (currentNode->column <= map->getMapY() / 2) { //check for if the current node is past half the map size
+						randLoc.x = rand() % 9 + 2;
+						randLoc.y = rand() % 11 + 2;
+					}
+					else {
+						randLoc.x = rand() % 9 + 2;
+						randLoc.y = rand() % 11 + 2;
+					}
+				}
+				if (map->mapArray[randLoc.x][randLoc.y]->Path == true) {
+					map->aStar(path, *currentNode, *map->mapArray[randLoc.x][randLoc.y]);
+					runFlag = true;
+				}
+			}
 		} break;
 	}
 }
+
+
 
 bool smartTank::isFiring()
 {
