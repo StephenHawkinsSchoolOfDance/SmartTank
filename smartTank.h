@@ -12,14 +12,14 @@ private:
 	Node* currentNode; // will be current location node
 	Node* targetNode; // target location node
 	std::list<Node> path; //list containing node objects / used with A* 
-	// bool checks
+						  // bool checks
 	bool runFlag = false;
 	bool crashed;
 	bool enemySpotted = false;
 	bool enemyBaseSpotted = false;
 	bool friendlyBaseSpotted = false;
 	bool lineOfSight = false;
-	bool shooting = false;
+	bool firing = false;
 	// counters
 	float enemyDistance = 1000;
 	int enemyBasesCount = 10;
@@ -27,6 +27,8 @@ private:
 	int scanCount = 0;
 	int turretAngle = 0;
 	int angle2Degree = 0;
+	int baseAngle = 0;
+	int baseAngle2Degree = 0;
 public:
 	smartTank();
 	~smartTank();

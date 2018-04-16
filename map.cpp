@@ -62,18 +62,20 @@ void Map::removeBase(int x, int y)
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < columns; j++) {
 			// loop through nodes
-			if (x < (mapArray[i][j]->getX() - width / 2) + width)
-				if (x + 50 > mapArray[i][j]->getX() - width / 2)
-					if (y < (mapArray[i][j]->getY() - height / 2) + height)
-						if (y + 50 > mapArray[i][j]->getY() - height / 2)
-							mapArray[i][j]->setWall(); 
-			// set node as wall / method changes path bool to true
+			if (x < (mapArray[i][j]->getX() - 35 / 2) + 35)
+				if (x + 50 > mapArray[i][j]->getX() - 35 / 2)
+					if (y < (mapArray[i][j]->getY() - 35 / 2) + 35)
+						if (y + 50 > mapArray[i][j]->getY() - 35 / 2) {
+							mapArray[i][j]->setWall();
+							mapArray[i][j]->Path = false;
+			}	// set node as wall / method changes path bool to true
 		}
 	}
 }
 
 bool Map::aStar(std::list<Node>& path, Node start, Node finish) // don't return path just change referenced one
 {
+	/*
 	// based off example code as i can't get mine working solo 
 	// Throw away vars
 	Node currentNode = start;
@@ -137,10 +139,63 @@ bool Map::aStar(std::list<Node>& path, Node start, Node finish) // don't return 
 			}
 		}
 	}
+	return false;*/
+	std::list<Node> open; // List of open nodes to be explored
+	std::list<Node> closed; // List of closed nodes which have been explored
+	closed.empty(); //empty closed list
+	Node currentNode = start; //set current node to start
+	Node goalNode = finish;
+	currentNode.parent = -1;
+	currentNode.g = 0;
+	currentNode.f = currentNode.g + currentNode.scoreCalc(currentNode.g, currentNode.getX(), currentNode.getY(), finish.getX(), finish.getY()); //score first node
+	open.push_back(currentNode);
+	while (!open.empty()) { //whilst there is nodes in the open list
+		std::stable_sort(open.begin(), open.end(),//sort the open list for node with smallest f cost
+			std::mem_fun_ref(&Node::lowerOutcome));
+		if (currentNode.row == finish.row  &&  currentNode.column == finish.column) {
+			path = createPath(path, closed, &finish);//if the current node  has reached the goal then return path
+			return true;
+		}
+
+		currentNode = open.front(); // Take the node that scored best on the open list
+		open.pop_front(); // Take it off the open list
+		closed.push_back(currentNode); // Add that node to the closed list
+		mapArray[currentNode.row][currentNode.column]->setGoal();
+		std::list<Node>::iterator cIterator;
+		std::list<Node>::iterator oIterator;
+		for (auto &neighbour : getNeigh(&currentNode)) { // for each of the neighbours of the current node
+			bool foundClosed = false;
+			for (cIterator = closed.begin(); cIterator != closed.end(); ++cIterator) { //look to see if it is on the closed list
+				if (neighbour->row == cIterator->row && neighbour->column == cIterator->column) {
+					foundClosed = true;
+				}
+			}
+			if (!foundClosed) {
+				neighbour->f = neighbour->g + neighbour->scoreCalc(neighbour->g, neighbour->getX(), neighbour->getY(), finish.getX(), finish.getY()); //score current node
+				bool foundOpen = false;
+				for (oIterator = open.begin(); oIterator != open.end(); ++oIterator) { //look to see if its on the open list 
+					if (neighbour->row == oIterator->row && neighbour->column == oIterator->column) {
+						foundOpen = true;
+					}
+				}
+				if (!foundOpen) {
+					open.push_back(*neighbour); // put node on open list 
+					mapArray[neighbour->row][neighbour->column]->setClosed();
+				}
+				else {
+					Node* openNeighbour = neighbour;
+					if (neighbour->g < openNeighbour->g) { //compare g cost 
+						openNeighbour->g = neighbour->g;
+						openNeighbour->parent = neighbour->parent;
+					}
+				}
+			}
+		}
+	}
 	return false;
 }
 
-std::list<Node> Map::createPath(std::list<Node>& path, std::list<Node>& closed, Node * node)
+std::list<Node> Map::createPath(std::list<Node>& path, std::list<Node>& closed, Node* node)
 {
 	Node* currentNode = node; // set goal node as current from construc
 	path.push_front(*currentNode); // give path currentnnode as starting point
@@ -160,7 +215,7 @@ std::list<Node> Map::createPath(std::list<Node>& path, std::list<Node>& closed, 
 std::vector<Node*> Map::getNeigh(Node * node)
 {
 	sf::Vector2i nodePos(node->row, node->column); // get node pos
-	static float diagonalCost = 1.414; // static cost var // could set in defs
+	float diagonalCost = 1.414; // static cost var // could set in defs
 	// used for when check for node out of bounds
 	std::vector<Node*> neighbours;
 	std::vector<bool> isDiagonal;

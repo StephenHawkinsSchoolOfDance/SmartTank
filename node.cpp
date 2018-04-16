@@ -67,12 +67,12 @@ void Node::setClosed()
 
 int Node::getX()
 {
-	return xPos + width / 2;
+	return xPos + width/2;
 }
 
 int Node::getY()
 {
-	return yPos + height / 2;
+	return yPos + height/2;
 }
 
 float Node::scoreCalc(float prevG, int x, int y, int goalX, int goalY)

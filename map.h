@@ -11,8 +11,8 @@ class Map
 {
 private:
 	Node* node; // pointer to a node	
-	static const int unsigned width = 35; //width of the Nodes
-	static const int unsigned height = 35; //height of the nodes
+	int width = 35; //width of the Nodes
+	int height = 35; //height of the nodes
 	static const int unsigned Width = 780; //width of the map
 	static const int unsigned Height = 570; //height of the map
 	static const int unsigned rows = 16;

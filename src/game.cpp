@@ -16,7 +16,7 @@ Game::Game() // Constructor
 	srand ( (int) time(NULL) );
 
 	// Set debug mode to off
-	debugMode = true;
+	debugMode = false;
 
 	// Borders
 	obstacles.push_back(Obstacle(0.f,0.f,10.f,580.f,sf::Color(100,100,100)));
@@ -29,42 +29,61 @@ Game::Game() // Constructor
 	dx = (float) (rand() % 340 + 400);
 	dy = (float) (rand() % 200 + 10);
 
-	redBuildings.push_back(Obstacle(dx,dy,dx+20.f,dy+20.f,sf::Color(170,60,60)));
-	redBuildings.push_back(Obstacle(dx+20.f,dy,dx+40.f,dy+20.f,sf::Color(170,40,40)));
-	redBuildings.push_back(Obstacle(dx,dy+20.f,dx+20.f,dy+40.f,sf::Color(170,40,40)));
-	redBuildings.push_back(Obstacle(dx+20.f,dy+20.f,dx+40.f,dy+40.f,sf::Color(170,60,60)));
-	redBuildings.push_back(Obstacle(dx,dy+40.f,dx+20.f,dy+60.f,sf::Color(170,60,60)));
-	redBuildings.push_back(Obstacle(dx+20.f,dy+40.f,dx+40.f,dy+60.f,sf::Color(170,40,40)));
+	redBuildings.push_back(Obstacle(dx, dy, dx + 20.f, dy + 20.f, sf::Color(170, 60, 60)));
+	npc.map->removeBase(dx, dy); //sets the building at these position to not traversable
+	redBuildings.push_back(Obstacle(dx + 20.f, dy, dx + 40.f, dy + 20.f, sf::Color(170, 40, 40)));
+	npc.map->removeBase(dx + 20, dy);
+	redBuildings.push_back(Obstacle(dx, dy + 20.f, dx + 20.f, dy + 40.f, sf::Color(170, 40, 40)));
+	npc.map->removeBase(dx, dy + 20);
+	redBuildings.push_back(Obstacle(dx + 20.f, dy + 20.f, dx + 40.f, dy + 40.f, sf::Color(170, 60, 60)));
+	npc.map->removeBase(dx + 20, dy + 20);
+	redBuildings.push_back(Obstacle(dx, dy + 40.f, dx + 20.f, dy + 60.f, sf::Color(170, 60, 60)));
+	npc.map->removeBase(dx, dy + 40);
+	redBuildings.push_back(Obstacle(dx + 20.f, dy + 40.f, dx + 40.f, dy + 60.f, sf::Color(170, 40, 40)));
+	npc.map->removeBase(dx + 20, dy + 40);
 
 	// Bottom right
-	dx = (float) (rand() % 340 + 400);
-	dy = (float) (rand() % 200 + 280);
+	dx = (float)(rand() % 340 + 400);
+	dy = (float)(rand() % 200 + 280);
 
-	redBuildings.push_back(Obstacle(dx,dy,dx+20.f,dy+20.f,sf::Color(170,60,60)));
-	redBuildings.push_back(Obstacle(dx+20.f,dy,dx+40.f,dy+20.f,sf::Color(170,40,40)));
-	redBuildings.push_back(Obstacle(dx,dy+20.f,dx+20.f,dy+40.f,sf::Color(170,40,40)));
-	redBuildings.push_back(Obstacle(dx+20.f,dy+20.f,dx+40.f,dy+40.f,sf::Color(170,60,60)));
+	redBuildings.push_back(Obstacle(dx, dy, dx + 20.f, dy + 20.f, sf::Color(170, 60, 60)));
+	npc.map->removeBase(dx, dy);
+	redBuildings.push_back(Obstacle(dx + 20.f, dy, dx + 40.f, dy + 20.f, sf::Color(170, 40, 40)));
+	npc.map->removeBase(dx + 20, dy);
+	redBuildings.push_back(Obstacle(dx, dy + 20.f, dx + 20.f, dy + 40.f, sf::Color(170, 40, 40)));
+	npc.map->removeBase(dx, dy + 20);
+	redBuildings.push_back(Obstacle(dx + 20.f, dy + 20.f, dx + 40.f, dy + 40.f, sf::Color(170, 60, 60)));
+	npc.map->removeBase(dx + 20, dy + 20);
 
 	// Top left
-	dx = (float) (rand() % 340 + 10);
-	dy = (float) (rand() % 200 + 10);
+	dx = (float)(rand() % 340 + 10);
+	dy = (float)(rand() % 200 + 10);
 
-	blueBuildings.push_back(Obstacle(dx,dy,dx+20,dy+20,sf::Color(60,60,170)));
-	blueBuildings.push_back(Obstacle(dx+20,dy,dx+40,dy+20,sf::Color(40,40,170)));
-	blueBuildings.push_back(Obstacle(dx,dy+20,dx+20,dy+40,sf::Color(40,40,170)));
-	blueBuildings.push_back(Obstacle(dx+20,dy+20,dx+40,dy+40,sf::Color(60,60,170)));
+	blueBuildings.push_back(Obstacle(dx, dy, dx + 20, dy + 20, sf::Color(60, 60, 170)));
+	npc.map->removeBase(dx, dy);
+	blueBuildings.push_back(Obstacle(dx + 20, dy, dx + 40, dy + 20, sf::Color(40, 40, 170)));
+	npc.map->removeBase(dx + 20, dy);
+	blueBuildings.push_back(Obstacle(dx, dy + 20, dx + 20, dy + 40, sf::Color(40, 40, 170)));
+	npc.map->removeBase(dx, dy + 20);
+	blueBuildings.push_back(Obstacle(dx + 20, dy + 20, dx + 40, dy + 40, sf::Color(60, 60, 170)));
+	npc.map->removeBase(dx + 20, dy + 20);
 
 	// Bottom left
-	dx = (float) (rand() % 340 + 10);
-	dy = (float) (rand() % 200 + 280);
+	dx = (float)(rand() % 340 + 10);
+	dy = (float)(rand() % 200 + 280);
 
-	blueBuildings.push_back(Obstacle(dx,dy,dx+20,dy+20,sf::Color(60,60,170)));
-	blueBuildings.push_back(Obstacle(dx+20,dy,dx+40,dy+20,sf::Color(40,40,170)));
-	blueBuildings.push_back(Obstacle(dx,dy+20,dx+20,dy+40,sf::Color(40,40,170)));
-	blueBuildings.push_back(Obstacle(dx+20,dy+20,dx+40,dy+40,sf::Color(60,60,170)));
-	blueBuildings.push_back(Obstacle(dx,dy+40,dx+20,dy+60,sf::Color(60,60,170)));
-	blueBuildings.push_back(Obstacle(dx+20,dy+40,dx+40,dy+60,sf::Color(40,40,170)));
-
+	blueBuildings.push_back(Obstacle(dx, dy, dx + 20, dy + 20, sf::Color(60, 60, 170)));
+	npc.map->removeBase(dx, dy);
+	blueBuildings.push_back(Obstacle(dx + 20, dy, dx + 40, dy + 20, sf::Color(40, 40, 170)));
+	npc.map->removeBase(dx + 20, dy);
+	blueBuildings.push_back(Obstacle(dx, dy + 20, dx + 20, dy + 40, sf::Color(40, 40, 170)));
+	npc.map->removeBase(dx, dy + 20);
+	blueBuildings.push_back(Obstacle(dx + 20, dy + 20, dx + 40, dy + 40, sf::Color(60, 60, 170)));
+	npc.map->removeBase(dx + 20, dy + 20);
+	blueBuildings.push_back(Obstacle(dx, dy + 40, dx + 20, dy + 60, sf::Color(60, 60, 170)));
+	npc.map->removeBase(dx, dy + 40);
+	blueBuildings.push_back(Obstacle(dx + 20, dy + 40, dx + 40, dy + 60, sf::Color(40, 40, 170)));
+	npc.map->removeBase(dx + 20, dy + 40);
 	resetNpc();
 	resetPlayer();
 
@@ -501,6 +520,12 @@ void Game::draw(sf::RenderTarget &target, sf::RenderStates states) const// Draw 
 			drawingText.setString(sf::String(msg));
 		}
 		target.draw(drawingText);
+	}
+
+	if (debugMode) {
+		npc.map->DrawMap(target);
+		//npc.node->DrawNode(target);
+		//target.draw(npc.drawRange());
 	}
 
 	//npc.map->DrawMap(target);
